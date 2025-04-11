@@ -1,5 +1,8 @@
 <!-- index.php - Main Page -->
-<?php include 'login_data.php'; ?>
+<?php 
+require_once 'init_db.php';
+include 'login_data.php'; 
+?>
 <!DOCTYPE html>
 <html>
 <head>

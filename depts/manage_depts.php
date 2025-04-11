@@ -1,24 +1,35 @@
 <!-- index.php - Main Page -->
 <?php
-$depts = json_decode(file_get_contents('depts_data.json'), true) ?? [];
-function savedeptData($depts) {
-    file_put_contents('depts_data.json', json_encode($depts, JSON_PRETTY_PRINT));
-}
+require_once 'controllers.php';
 session_start();
-if (!isset($_SESSION['role'])) {
+
+if (!isset($_SESSION['role']) || $_SESSION['role'] != 'admin') {
     echo "Unauthorized access!";
     exit;
 }
-$role = $_SESSION['role'];
-if ($role != 'admin') {
-    echo "Unauthorized access!";
-    exit;
+
+// Handle dept add
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dept_name'])) {
+    $msg = addDept(trim($_POST['dept_name']));
+    echo "<script>alert('$msg'); window.location.href='manage_depts.php';</script>";
+    exit();
 }
+
+
+// Handle dept delete
+if (isset($_GET['delete']) && isset($_GET['dept_name'])) {
+    deleteDept($_GET['dept_name']);
+    header("Location: manage_depts.php");
+    exit();
+}
+
+$depts = getDepts();
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>dept Management</title>
+    <title>Dept Management</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -97,17 +108,17 @@ if ($role != 'admin') {
     </style>
 </head>
 <body>
-    <h1>employee Management System</h1>
+    <h1>Employee Management System</h1>
     <div style="text-align: left; ">
         <a href="../dashboard.php" style="text-align: left; background-color:#006081;">< Back to Dashboard</a>
     </div>
-    <h3>Add dept</h3>
-    <form action="add_dept.php" method="POST">
-        <input type="text" name="name" placeholder="Name" required>
-        <button type="submit">Add dept</button>
+    <h3>Add Dept</h3>
+    <form action="manage_depts.php" method="POST">
+        <input type="text" name="dept_name" placeholder="Name" required>
+        <button type="submit">Add Dept</button>
     </form>
     
-    <h3>dept List</h3>
+    <h3>Dept List</h3>
     <table>
         <tr>
             <th>No</th>
@@ -119,8 +130,8 @@ if ($role != 'admin') {
                 <td><?php echo $index + 1; ?></td>
                 <td><?php echo $dept['name']; ?></td>
                 <td>
-                    <a href='edit_dept.php?no=<?php echo $index; ?>'>Edit</a>
-                    <a href='delete_dept.php?no=<?php echo $index; ?>' class="delete">Delete</a>
+                    <a href='edit_dept.php?dept_name=<?php echo urlencode($dept['name']); ?>'>Edit</a>
+                    <a href='manage_depts.php?delete=true&dept_name=<?php echo urlencode($dept['name']); ?>' class="delete">Delete</a>
                 </td>
             </tr>
         <?php } ?>

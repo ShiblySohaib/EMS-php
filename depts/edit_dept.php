@@ -1,7 +1,22 @@
 <?php
-include 'depts.php';
-$no = $_GET['no'];
-$dept = $depts[$no];
+require 'controllers.php';
+
+$old_name = $_GET['dept_name'] ?? '';
+$message = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $old_name = $_POST['old_name'];
+    $new_name = $_POST['new_name'];
+    $message = editDept($old_name, $new_name);
+    $old_name = $new_name;
+
+    if ($message === "Department updated successfully.") {
+        echo "<script>alert('$message'); window.location.href='manage_depts.php';</script>";
+        exit;
+    } else {
+        echo "<script>alert('$message');</script>";
+    }
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -45,26 +60,21 @@ $dept = $depts[$no];
             font-size: 16px;
         }
         button:hover {
-            background: #006081;
+            background: #004d66;
         }
-        h1{
-            background-color:#006081;
+        h1 {
+            background-color: #006081;
             color: #f8f9fa;
             padding: 10px 0px;
         }
     </style>
-    <script>
-        function confirmUpdate() {
-            return confirm("Are you sure you want to update this dept?");
-        }
-    </script>
 </head>
 <body>
     <h1>Edit dept Info</h1>
-    <form action="update_dept.php" method="POST" onsubmit="return confirmUpdate()">
-        <input type="hidden" name="no" value="<?php echo $no; ?>">
+    <form method="POST">
+        <input type="hidden" name="old_name" value="<?php echo htmlspecialchars($old_name); ?>">
         <div class="container">
-            <input type="text" name="name" placeholder="Name" value="<?php echo $dept['name']; ?>" required>
+            <input type="text" name="new_name" placeholder="Name" value="<?php echo htmlspecialchars($old_name); ?>" required>
         </div>
         <button type="submit">Update</button>
     </form>
