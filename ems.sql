@@ -33,3 +33,8 @@ CREATE TABLE user_tasks (
     FOREIGN KEY (task_id) REFERENCES tasks(task_id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (dept_name) REFERENCES depts(name) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+-- dummy data, pass will be hashed in init
+INSERT INTO users (name, password, role) VALUES 
+('shibly', 'TO_BE_HASHED', 'admin'),
+('Rayhan', 'TO_BE_HASHED', 'supervisor');

@@ -1,7 +1,9 @@
-<!-- delete.php - Delete task -->
 <?php
-include 'tasks.php';
-array_splice($tasks, $_GET['no'], 1);
-savetaskData($tasks);
-header("Location: manage_tasks.php");
+require 'task_controllers.php';
+
+if (isset($_GET['task_id'])) {
+    deleteTask($_GET['task_id']);
+    header("Location: manage_tasks.php");
+    exit();
+}
 ?>

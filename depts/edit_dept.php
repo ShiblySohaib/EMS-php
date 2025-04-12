@@ -1,5 +1,5 @@
 <?php
-require 'controllers.php';
+require 'dept_controllers.php';
 
 $old_name = $_GET['dept_name'] ?? '';
 $message = '';

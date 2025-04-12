@@ -1,20 +1,31 @@
-<!-- index.php - Main Page -->
 <?php
-$tasks = json_decode(file_get_contents('tasks_data.json'), true) ?? [];
-function savetaskData($tasks) {
-    file_put_contents('tasks_data.json', json_encode($tasks, JSON_PRETTY_PRINT));
-}
+require 'task_controllers.php';
+
 session_start();
 if (!isset($_SESSION['role'])) {
     echo "Unauthorized access!";
-    exit;
+    exit();
 }
-$role = $_SESSION['role'];
+
+$tasks = getTasks();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['name'])) {
+    addTask(trim($_POST['name']));
+    echo "<script>alert('Task added successfully!'); window.location.href='manage_tasks.php';</script>";
+    exit();
+}
+
+if (isset($_GET['delete']) && isset($_GET['task_id'])) {
+    deleteTask($_GET['task_id']);
+    header("Location: manage_tasks.php");
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>task Management</title>
+    <title>Task Management</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -22,9 +33,7 @@ $role = $_SESSION['role'];
             text-align: center;
             background-color: #f8f9fa;
         }
-        h1, h3 {
-            color: #333;
-        }
+        h1, h3 { color: #333; }
         form {
             width: 30%;
             margin: 20px auto;
@@ -32,10 +41,8 @@ $role = $_SESSION['role'];
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
         }
-        input {
+        input, select {
             width: 100%;
             padding: 8px;
             margin-top: 5px;
@@ -52,10 +59,9 @@ $role = $_SESSION['role'];
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+            width: 100%;
         }
-        button:hover {
-            background: #006081;
-        }
+        button:hover { background: #006081; }
         table {
             width: 80%;
             margin: 20px auto;
@@ -85,46 +91,44 @@ $role = $_SESSION['role'];
         a:hover {
             opacity: 0.8;
         }
-        h1{
+        h1 {
             background-color:#006081;
             color: #f8f9fa;
             padding: 10px 0px;
         }
     </style>
 </head>
+
 <body>
-    <h1>employee Management System</h1>
-    <div style="text-align: left; ">
-        <a href="../dashboard.php" style="text-align: left; background-color:#006081;">< Back to Dashboard</a>
+    <h1>Task Management System</h1>
+    <div style="text-align: left;">
+        <a href="../dashboard.php" style="background-color:#006081;">← Back to Dashboard</a>
     </div>
-    <?php if ($role === "admin") { ?>
-        <h3>Add task</h3>
-        <form action="add_task.php" method="POST">
-            <input type="text" name="name" placeholder="Name" required>
-            <input type="text" name="id" placeholder="task ID" required>
-            <button type="submit">Add task</button>
-        </form>
-    <?php } ?>
-    
-    <h3>task List</h3>
+
+    <h3>Add Task</h3>
+    <form action="manage_tasks.php" method="POST">
+        <input type="text" name="name" placeholder="Task Name" required>
+        <button type="submit">Add Task</button>
+    </form>
+
+    <h3>Task List</h3>
     <table>
         <tr>
-            <th>No</th>
-            <th>Name</th>
             <th>ID</th>
+            <th>Name</th>
             <th>Action</th>
         </tr>
-        <?php foreach ($tasks as $index => $task) { ?>
+        <?php foreach ($tasks as $task) { ?>
             <tr>
-                <td><?php echo $index + 1; ?></td>
+                <td><?php echo $task['task_id']; ?></td>
                 <td><?php echo $task['name']; ?></td>
-                <td><?php echo $task['id']; ?></td>
                 <td>
-                    <a href='edit_task.php?no=<?php echo $index; ?>'>Edit</a>
-                    <a href='delete_task.php?no=<?php echo $index; ?>' class="delete">Delete</a>
+                    <a href='edit_task.php?task_id=<?php echo $task['task_id']; ?>'>Edit</a>
+                    <a href='manage_tasks.php?delete=true&task_id=<?php echo $task['task_id']; ?>' class="delete">Delete</a>
                 </td>
             </tr>
         <?php } ?>
     </table>
 </body>
+
 </html>

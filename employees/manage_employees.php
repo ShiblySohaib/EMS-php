@@ -1,23 +1,51 @@
-<!-- index.php - Main Page -->
 <?php 
-include "employees.php";
-$depts = json_decode(file_get_contents('../depts/depts_data.json'), true) ?? [];
-$tasks = json_decode(file_get_contents('../tasks/tasks_data.json'), true) ?? [];
+require_once 'employee_controllers.php';
+require_once '..\depts\dept_controllers.php';
+require_once '..\tasks\task_controllers.php';
+require_once '..\users\user_controllers.php';
 session_start();
+
 if (!isset($_SESSION['role'])) {
     echo "Unauthorized access!";
     exit;
 }
+
 $role = $_SESSION['role'];
 if ($role == 'employee') {
     echo "Unauthorized access!";
     exit;
 }
+
+$depts = getDepts(); 
+$tasks = getTasks(); 
+
+$search = $_GET['search'] ?? '';
+$users = [];
+
+if ($search) {
+    global $mysqli;
+    $stmt = $mysqli->prepare("
+        SELECT DISTINCT u.*
+        FROM users u
+        LEFT JOIN user_tasks ut ON u.user_id = ut.user_id
+        WHERE u.user_id LIKE CONCAT('%', ?, '%') 
+           OR u.name LIKE CONCAT('%', ?, '%') 
+           OR ut.dept_name LIKE CONCAT('%', ?, '%')
+    ");
+    $stmt->bind_param("sss", $search, $search, $search);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $users = $result->fetch_all(MYSQLI_ASSOC);
+} else {
+    $users = getUsers(); 
+}
+
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
-    <title>employee Management</title>
+    <title>Employee Management</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,9 +53,7 @@ if ($role == 'employee') {
             text-align: center;
             background-color: #f8f9fa;
         }
-        h1, h3 {
-            color: #333;
-        }
+        h1, h3 { color: #333; }
         form {
             width: 30%;
             margin: 20px auto;
@@ -55,9 +81,7 @@ if ($role == 'employee') {
             font-size: 16px;
             width: 100%;
         }
-        button:hover {
-            background: #006081;
-        }
+        button:hover { background: #006081; }
         table {
             width: 80%;
             margin: 20px auto;
@@ -87,90 +111,121 @@ if ($role == 'employee') {
         a:hover {
             opacity: 0.8;
         }
-        h1{
+        h1 {
             background-color:#006081;
             color: #f8f9fa;
             padding: 10px 0px;
         }
-        .task-choice{
+        .task-choice {
             font-size: small;
             text-align: left;
             padding: 5px;
         }
-        .task-choice input{
+        .task-choice input {
             width: auto;
         }
-        .tasks{
-            text-align: left;
-            padding-left: 3em;
+        hr {
+            border: none;
+            height: 1px;
+            color: #333;
+            background-color: #333;
+            margin-left:-10px;
+            margin-right:-10px;
+        }
+        .search-bar {
+            width: 80%;
+            margin: 0 auto 50px;
+        }
+        .search-bar input {
+            padding: 10px;
+            width: 75%;
+        }
+        .search-bar button {
+            width: auto;
+        }
+        .clear-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        .clear-btn:hover {
+            opacity: 0.9;
         }
     </style>
 </head>
 <body>
-    <h1>employee Registration Management System</h1>
+    <h1>Employee Registration Management System</h1>
     <div style="text-align: left; ">
         <a href="../dashboard.php" style="text-align: left; background-color:#006081;">< Back to Dashboard</a>
     </div>
 
-
-    <!-- Add employee -->
-    <?php if ($role === "admin") { ?>
-        <h3>Add employee</h3>
-        <form action="add_employee.php" method="POST">
-            <input type="text" name="name" placeholder="Name" required>
-            <input type="text" name="id" placeholder="employee ID" required>
-            <select name="dept" placeholder="dept" required>
-                <option value="" readonly selected>Select dept</option>
-                <?php foreach ($depts as $dept): ?>
-                        <option value="<?= $dept['name'] ?>"><?= $dept['name'] ?></option>
-                    <?php endforeach; ?>
-            </select>
-            <div class="task-choice">
-                <label>Choose tasks:</label><br>
-                <?php foreach ($tasks as $task): ?>
-                <input type="checkbox" name="tasks[]" value="<?= $task['name'] ?>"> 
-                <?= $task['name'] ?><br>
-                <?php endforeach; ?>
-            </div>
-    
-            <button type="submit">Add employee</button>
+    <h3>Search Employee</h3>
+    <div class="search-bar">
+        <form method="GET">
+            <input type="text" name="search" placeholder="Search by ID or Name or Dept" value="<?= htmlspecialchars($search) ?>">
+            <br>
+            <button type="submit">Search</button>
         </form>
-    <?php } ?>
-    
-    <h3>employee List</h3>
+    </div>
+
+    <?php if ($search): ?>
+        <a href="manage_employees.php" class="clear-btn">Clear Search</a>
+    <?php endif; ?>
+
+    <h3>Employee List</h3>
     <table>
         <tr>
             <th>No</th>
             <th>Name</th>
             <th>ID</th>
-            <th>dept</th>
-            <th>tasks</th>
+            <th>Dept</th>
+            <th>Tasks</th>
             <th>Action</th>
         </tr>
-        <?php foreach ($employees as $index => $employee) { ?>
-            <tr>
-                <td><?php echo $index + 1; ?></td>
-                <td><?php echo $employee['name']; ?></td>
-                <td><?php echo $employee['id']; ?></td>
-                <td><?php echo $employee['dept']; ?></td>
-                <td class="tasks">
-                <?php if (empty($employee['tasks'])) { ?>
-                    <p>None</p>
-                <?php } else { ?>
-                    <ul>
-                        <?php foreach ($employee['tasks'] as $task) { ?>
-                            <li><?php echo $task; ?></li>
-                        <?php } ?>
-                    </ul>
-                <?php } ?>
+        <?php 
+        $i = 1;
+        foreach ($users as $user): 
+            $user_id = $user['user_id'];
+            $user_name = $user['name'];
+            $dept_name = '';
 
-                </td>
-                <td>
-                    <a href='edit_employee.php?no=<?php echo $index; ?>'>Edit</a>
-                    <a href='delete_employee.php?no=<?php echo $index; ?>' class="delete">Delete</a>
-                </td>
-            </tr>
-        <?php } ?>
+            $userTasks = getUserTasks($user_id);
+            $task_names = [];
+
+            if (!empty($userTasks)) {
+                $dept_name = $userTasks[0]['dept_name'] ?? '';
+                foreach ($userTasks as $task) {
+                    $task_names[] = $task['task_name'];
+                }
+            }
+        ?>
+        <tr>
+            <td><?= $i++ ?></td>
+            <td><?= htmlspecialchars($user_name) ?></td>
+            <td><?= htmlspecialchars($user_id) ?></td>
+            <td><?= htmlspecialchars($dept_name) ?></td>
+            <td class="tasks">
+                <?php if (empty($task_names)): ?>
+                    <p>No current tasks</p>
+                <?php else: ?>
+                    <?php foreach ($task_names as $index => $task): ?>
+                        <div><?= htmlspecialchars($task) ?></div>
+                        <?php if ($index < count($task_names) - 1): ?>
+                            <hr>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </td>
+            <td>
+                <a href='edit_employee.php?user_id=<?= $user_id ?>'>Edit</a>
+                <a href='delete_employee.php?user_id=<?= $user_id ?>' class="delete">Delete</a>
+            </td>
+        </tr>
+        <?php endforeach; ?>
     </table>
 </body>
 </html>

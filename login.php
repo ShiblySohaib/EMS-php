@@ -1,31 +1,22 @@
 <?php
 session_start();
-include 'login_data.php';
+require 'auth_controllers.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'];
     $password = $_POST['password'];
 
-    function authenticate($id, $password, $users) {
-        foreach ($users as $user) {
-            if ($user['id'] === $id && $user['password'] == $password) {
-                return $user['role'];
-            }
-        }
-        return false;
-    }
+    $user = authenticate($id, $password);
 
-    $role = authenticate($id, $password, $all_users);
-
-    if ($role) {
-        $_SESSION['role'] = $role;
-        $_SESSION['id'] = $_POST['id'];
+    if ($user) {
+        $_SESSION['role'] = $user['role'];
+        $_SESSION['id'] = $user['user_id'];
+        $_SESSION['name'] = $user['name'];
+        header("Location: dashboard.php");
+        exit();
     } else {
-        echo "<script>alert('Invalid id or password'); window.location.href='index.php';</script>";
-        exit;
+        echo "<script>alert('Invalid ID or password'); window.location.href='index.php';</script>";
+        exit();
     }
-
-    header("Location: dashboard.php");
-    exit;
 }
 ?>

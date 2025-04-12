@@ -116,39 +116,30 @@ $employeeDept = $userTasksData[0]['dept_name'] ?? '';
 </head>
 <body>
     <h1>Edit Employee Info</h1>
-    <form action="update_employee.php" method="POST" onsubmit="<?= $role === 'employee' ? 'return true' : 'return validateUserId()' ?>">
+    <form action="update_employee.php" method="POST" onsubmit="return validateUserId()">
+
         <!-- Hidden old user ID -->
         <input type="hidden" name="old_user_id" value="<?= $employee['user_id'] ?>">
 
-        <!-- User ID -->
-        <?php if ($role === 'employee'): ?>
-            <input type="text" value="<?= $employee['user_id'] ?>" readonly>
-            <input type="hidden" name="user_id" value="<?= $employee['user_id'] ?>">
-        <?php else: ?>
-            <input type="text" name="user_id" id="user_id" value="<?= $employee['user_id'] ?>" required>
-        <?php endif; ?>
+        <!-- Editable user ID -->
+        <input type="text" name="user_id" id="user_id" value="<?= $employee['user_id'] ?>" required>
 
         <!-- Name -->
-        <?php if ($role === 'employee'): ?>
-            <input type="text" value="<?= $employee['name']; ?>" readonly>
-            <input type="hidden" name="name" value="<?= $employee['name']; ?>">
-        <?php else: ?>
-            <input type="text" name="name" placeholder="Name" value="<?= $employee['name']; ?>" required>
-        <?php endif; ?>
+        <input type="text" name="name" placeholder="Name" value="<?= $employee['name']; ?>" required>
 
-        <!-- Department -->
-        <?php if ($role === 'employee'): ?>
-            <input type="text" value="<?= $employeeDept ?>" readonly>
+        <!-- Department Select -->
+        <select name="dept" required <?= $role !== 'admin' ? 'disabled' : '' ?>>
+            <option value="" readonly>Select Dept</option>
+            <?php foreach ($depts as $dept): ?>
+                <option value="<?= $dept['name'] ?>" <?= $employeeDept == $dept['name'] ? 'selected' : ''; ?>>
+                    <?= $dept['name'] ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+
+        <!-- Hidden dept input if not admin -->
+        <?php if ($role !== 'admin'): ?>
             <input type="hidden" name="dept" value="<?= $employeeDept ?>">
-        <?php else: ?>
-            <select name="dept" required>
-                <option value="" readonly>Select Dept</option>
-                <?php foreach ($depts as $dept): ?>
-                    <option value="<?= $dept['name'] ?>" <?= $employeeDept == $dept['name'] ? 'selected' : ''; ?>>
-                        <?= $dept['name'] ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
         <?php endif; ?>
 
         <!-- Task Checklist -->
@@ -167,6 +158,5 @@ $employeeDept = $userTasksData[0]['dept_name'] ?? '';
         <!-- Update Button -->
         <button type="submit">Update</button>
     </form>
-
 </body>
 </html>

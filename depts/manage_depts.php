@@ -1,6 +1,6 @@
 <!-- index.php - Main Page -->
 <?php
-require_once 'controllers.php';
+require_once 'dept_controllers.php';
 session_start();
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'admin') {

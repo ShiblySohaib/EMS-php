@@ -4,7 +4,7 @@ $username = "root";
 $password = "";
 $dbname = "ems";
 
-// Connect to MySQL server (no DB selected)
+// Connect to MySQL server
 $conn = new mysqli($servername, $username, $password);
 if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
 
@@ -14,10 +14,10 @@ $dbExists = $conn->query("SHOW DATABASES LIKE '$dbname'")->num_rows > 0;
 if (!$dbExists) {
     createDbAndTables($conn);
 } else {
-    // Now safely select the DB
+    // Select the DB
     $conn->select_db($dbname);
 
-    // Check if all required tables exist
+    // Check if tables exist
     $requiredTables = ['users', 'tasks', 'depts', 'user_tasks'];
     $existingTables = [];
 
@@ -33,6 +33,20 @@ if (!$dbExists) {
     }
 }
 
+// Update stored passwords with hashed versions
+$stmt = $conn->prepare("UPDATE users SET password = ? WHERE name = ?");
+
+$hashedPasswords = [
+    ["shibly", password_hash("123", PASSWORD_BCRYPT)],
+    ["Rayhan", password_hash("123", PASSWORD_BCRYPT)]
+];
+
+foreach ($hashedPasswords as $user) {
+    $stmt->bind_param("ss", $user[1], $user[0]);
+    $stmt->execute();
+}
+
+$stmt->close();
 $conn->close();
 
 // Function to create DB and tables
