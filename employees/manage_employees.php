@@ -31,13 +31,14 @@ if ($search) {
         WHERE u.user_id LIKE CONCAT('%', ?, '%') 
            OR u.name LIKE CONCAT('%', ?, '%') 
            OR ut.dept_name LIKE CONCAT('%', ?, '%')
+           AND u.role = 'employee'
     ");
     $stmt->bind_param("sss", $search, $search, $search);
     $stmt->execute();
     $result = $stmt->get_result();
     $users = $result->fetch_all(MYSQLI_ASSOC);
 } else {
-    $users = getUsers(); 
+    $users = getEmployees(); 
 }
 
 ?>

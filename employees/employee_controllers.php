@@ -117,4 +117,11 @@ function registerEmployee($name, $password, $role) {
     $stmt->execute();
     $stmt->close();
 }
+
+
+function getEmployees() {
+    global $mysqli;
+    $result = $mysqli->query("SELECT * FROM users where role='employee'");
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
 ?>

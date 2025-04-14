@@ -5,7 +5,7 @@ require_once 'init_db.php';
 <!DOCTYPE html>
 <html>
 <head>
-    <title>employee Management</title>
+    <title>Employee Management</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -77,7 +77,7 @@ require_once 'init_db.php';
     </style>
 </head>
 <body>
-    <h1>employee Registration Management System</h1>
+    <h1>Employee Management System</h1>
     <h3>Log In</h3>
     <form action="login.php" method="POST">
         <input type="text" name="id" placeholder="user ID" required>
